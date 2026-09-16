@@ -137,10 +137,17 @@ Because there are 2 replicas and the receiver log is in-memory per pod, run
 the loop inside a single pod so subscribe/trigger/log hit the same process:
 ```bash
 POD=$(kubectl get pods -l app=api-styles-demo -o jsonpath='{.items[0].metadata.name}')
-kubectl exec $POD -- sh -c '
-  curl -s -X POST localhost:3000/api/webhooks/subscribe -H "Content-Type: application/json" -d "{\"url\":\"http://localhost:3000/api/webhooks/receiver\"}";
-  curl -s -X POST localhost:3000/api/webhooks/trigger  -H "Content-Type: application/json" -d "{\"type\":\"order.created\"}";
-  curl -s localhost:3000/api/webhooks/receiver/log'
+kubectl exec "$POD" -- node -e '
+const b="http://localhost:3000";
+(async()=>{
+  const sub=await(await fetch(b+"/api/webhooks/subscribe",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({url:b+"/api/webhooks/receiver"})})).json();
+  console.log("subscribe:",JSON.stringify(sub));
+  const trig=await(await fetch(b+"/api/webhooks/trigger",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({type:"order.created",data:{orderId:42}})})).json();
+  console.log("trigger:",JSON.stringify(trig));
+  const log=await(await fetch(b+"/api/webhooks/receiver/log")).json();
+  console.log("log:",JSON.stringify(log));
+})();
+'
 ```
 
 ---
