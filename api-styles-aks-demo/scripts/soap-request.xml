@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/"
+               xmlns:tns="http://example.com/calculator">
+  <soap:Body>
+    <tns:AddRequest>
+      <a>5</a>
+      <b>7</b>
+    </tns:AddRequest>
+  </soap:Body>
+</soap:Envelope>

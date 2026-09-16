@@ -1,0 +1,19 @@
+{
+  "name": "api-styles-aks-demo",
+  "version": "1.0.0",
+  "description": "One service demonstrating REST, GraphQL, WebSocket, gRPC, SOAP and Webhooks on AKS",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "grpc-client": "node grpc-client.js"
+  },
+  "dependencies": {
+    "@grpc/grpc-js": "^1.11.3",
+    "@grpc/proto-loader": "^0.7.13",
+    "express": "^4.21.0",
+    "graphql": "^16.9.0",
+    "graphql-yoga": "^5.7.0",
+    "soap": "^1.1.5",
+    "ws": "^8.18.0"
+  }
+}

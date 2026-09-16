@@ -1,0 +1,30 @@
+syntax = "proto3";
+
+package demo;
+
+// A tiny "microservice contract". gRPC is contract-first (this .proto is the
+// contract) and runs over HTTP/2 with binary Protobuf - fast service-to-service.
+service Calculator {
+  // Unary RPC: one request, one response.
+  rpc Add (AddRequest) returns (AddReply) {}
+
+  // Server-streaming RPC: one request, a stream of responses.
+  rpc GenerateNumbers (NumberRequest) returns (stream NumberReply) {}
+}
+
+message AddRequest {
+  int32 a = 1;
+  int32 b = 2;
+}
+
+message AddReply {
+  int32 result = 1;
+}
+
+message NumberRequest {
+  int32 count = 1;
+}
+
+message NumberReply {
+  int32 value = 1;
+}

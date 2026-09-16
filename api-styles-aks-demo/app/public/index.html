@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Six API Styles · AKS demo</title>
+<style>
+  :root{
+    --board:#0e1524;          /* the "dark board" from the slide            */
+    --panel:#151d30;
+    --panel-2:#1b2540;
+    --line:#28324c;
+    --ink:#e8edf7;
+    --muted:#8a97b2;
+    --yellow:#f2c14e;         /* the slide's highlight colour               */
+    --cyan:#5aa9ff;
+    --green:#57d38c;
+    --red:#ff7a7a;
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0;background:var(--board);color:var(--ink);
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;
+    line-height:1.5;
+  }
+  code,pre,.mono{font-family:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace}
+
+  header{
+    padding:26px 22px 20px;border-bottom:1px solid var(--line);
+    display:flex;flex-wrap:wrap;align-items:flex-end;gap:6px 24px;
+  }
+  header h1{font-size:20px;margin:0;font-weight:650;letter-spacing:.2px}
+  header h1 b{color:var(--yellow);font-weight:650}
+  header p{margin:0;color:var(--muted);font-size:13px;flex:1 1 320px}
+  .status{display:flex;align-items:center;gap:8px;font-size:12.5px;color:var(--muted)}
+  .dot{width:9px;height:9px;border-radius:50%;background:var(--red);box-shadow:0 0 0 0 rgba(87,211,140,.6)}
+  .dot.live{background:var(--green);animation:pulse 2s infinite}
+  @keyframes pulse{0%{box-shadow:0 0 0 0 rgba(87,211,140,.5)}70%{box-shadow:0 0 0 7px rgba(87,211,140,0)}100%{box-shadow:0 0 0 0 rgba(87,211,140,0)}}
+  @media (prefers-reduced-motion:reduce){.dot.live{animation:none}}
+
+  main{padding:22px;max-width:1180px;margin:0 auto}
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:16px}
+
+  .panel{background:var(--panel);border:1px solid var(--line);border-left:3px solid var(--yellow);border-radius:6px;padding:16px 16px 14px;display:flex;flex-direction:column;gap:10px}
+  .panel .tag{font-size:12px;color:var(--yellow);letter-spacing:1px}
+  .panel h2{margin:0;font-size:17px}
+  .panel .desc{margin:0;color:var(--muted);font-size:13px;min-height:34px}
+  .row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+
+  button{
+    background:var(--panel-2);color:var(--ink);border:1px solid var(--line);
+    padding:7px 12px;border-radius:5px;font-size:13px;cursor:pointer;
+  }
+  button:hover{border-color:var(--cyan)}
+  button:focus-visible{outline:2px solid var(--cyan);outline-offset:2px}
+  button.primary{background:var(--cyan);border-color:var(--cyan);color:#06101f;font-weight:600}
+  input[type=text]{background:var(--board);border:1px solid var(--line);color:var(--ink);padding:7px 9px;border-radius:5px;font-size:13px;min-width:120px;flex:1}
+
+  pre.out{background:#0a0f1c;border:1px solid var(--line);border-radius:5px;margin:0;padding:10px;font-size:12px;color:#cdd7ee;white-space:pre-wrap;word-break:break-word;max-height:190px;overflow:auto;min-height:44px}
+  .hint{color:var(--muted);font-size:12px}
+  a{color:var(--cyan)}
+</style>
+</head>
+<body>
+<header>
+  <h1>Six API styles, one deployment &nbsp;·&nbsp; <b>AKS</b></h1>
+  <p>REST · GraphQL · WebSocket · gRPC · SOAP · Webhooks — the same pod, behind one LoadBalancer service.</p>
+  <div class="status"><span id="wsdot" class="dot"></span><span id="wstext">WebSocket: connecting…</span></div>
+</header>
+
+<main>
+  <div class="grid">
+
+    <!-- REST -->
+    <section class="panel">
+      <span class="tag mono">REST</span>
+      <h2>Books resource</h2>
+      <p class="desc">The most widely used style. Resources + HTTP verbs (GET/POST) and status codes.</p>
+      <div class="row">
+        <button class="primary" onclick="rest()">GET /api/rest/books</button>
+        <button onclick="restAdd()">POST a book</button>
+      </div>
+      <pre class="out" id="restOut">—</pre>
+    </section>
+
+    <!-- GraphQL -->
+    <section class="panel">
+      <span class="tag mono">GRAPHQL</span>
+      <h2>Flexible fetching</h2>
+      <p class="desc">Ask for exactly the fields you want from one endpoint. No over-fetching.</p>
+      <div class="row">
+        <button class="primary" onclick="gql('{ books { title } }')">title only</button>
+        <button onclick="gql('{ books { title author year } }')">title + author + year</button>
+      </div>
+      <pre class="out" id="gqlOut">—</pre>
+      <span class="hint">Full IDE: <a href="/graphql" target="_blank">/graphql</a></span>
+    </section>
+
+    <!-- WebSocket -->
+    <section class="panel">
+      <span class="tag mono">WEBSOCKET</span>
+      <h2>Real-time stream</h2>
+      <p class="desc">Full-duplex. The server pushes a tick every 2s; send a message and it echoes back.</p>
+      <div class="row">
+        <input type="text" id="wsMsg" placeholder="type a message" value="hello">
+        <button class="primary" onclick="wsSend()">Send</button>
+      </div>
+      <pre class="out" id="wsOut">—</pre>
+    </section>
+
+    <!-- gRPC -->
+    <section class="panel">
+      <span class="tag mono">GRPC</span>
+      <h2>Between microservices</h2>
+      <p class="desc">HTTP/2 + binary Protobuf on port 50051. Browsers can't call it directly — run a client:</p>
+      <pre class="out" id="grpcOut">node grpc-client.js &lt;LB_IP&gt;:50051
+
+# or with grpcurl:
+grpcurl -plaintext -d '{"a":5,"b":7}' \
+  &lt;LB_IP&gt;:50051 demo.Calculator/Add</pre>
+      <div class="row"><button onclick="copyGrpc()">Copy command</button></div>
+    </section>
+
+    <!-- SOAP -->
+    <section class="panel">
+      <span class="tag mono">SOAP</span>
+      <h2>XML envelopes</h2>
+      <p class="desc">Enterprise style. WSDL contract at <a href="/soap?wsdl" target="_blank">/soap?wsdl</a>. Calls Add(5, 7).</p>
+      <div class="row"><button class="primary" onclick="soap()">POST SOAP Add(5,7)</button></div>
+      <pre class="out" id="soapOut">—</pre>
+    </section>
+
+    <!-- Webhooks -->
+    <section class="panel">
+      <span class="tag mono">WEBHOOKS</span>
+      <h2>Event notifications</h2>
+      <p class="desc">Server calls you. Subscribe the built-in receiver, fire an event, read the log.</p>
+      <div class="row">
+        <button onclick="whSub()">1 · Subscribe</button>
+        <button class="primary" onclick="whTrigger()">2 · Trigger</button>
+        <button onclick="whLog()">3 · Read log</button>
+      </div>
+      <pre class="out" id="whOut">—</pre>
+    </section>
+
+  </div>
+</main>
+
+<script>
+const show = (id,v)=>{document.getElementById(id).textContent = typeof v==='string'?v:JSON.stringify(v,null,2);};
+const err  = (id,e)=>{document.getElementById(id).textContent = 'Error: '+(e.message||e);};
+
+// REST
+async function rest(){try{const r=await fetch('/api/rest/books');show('restOut',await r.json());}catch(e){err('restOut',e);}}
+async function restAdd(){try{
+  const r=await fetch('/api/rest/books',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({title:'A New Book',author:'You'})});
+  show('restOut',{status:r.status,body:await r.json()});
+}catch(e){err('restOut',e);}}
+
+// GraphQL
+async function gql(query){try{
+  const r=await fetch('/graphql',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({query})});
+  show('gqlOut',await r.json());
+}catch(e){err('gqlOut',e);}}
+
+// WebSocket
+let ws;
+function connectWS(){
+  const proto = location.protocol==='https:'?'wss':'ws';
+  ws = new WebSocket(`${proto}://${location.host}/ws`);
+  const dot=document.getElementById('wsdot'), txt=document.getElementById('wstext');
+  ws.onopen = ()=>{dot.classList.add('live');txt.textContent='WebSocket: live';};
+  ws.onclose= ()=>{dot.classList.remove('live');txt.textContent='WebSocket: disconnected';setTimeout(connectWS,3000);};
+  ws.onmessage = (m)=>{
+    const box=document.getElementById('wsOut');
+    box.textContent = (m.data + "\n" + box.textContent).split("\n").slice(0,8).join("\n");
+  };
+}
+function wsSend(){const v=document.getElementById('wsMsg').value; if(ws&&ws.readyState===1) ws.send(v);}
+
+// gRPC (copy only)
+function copyGrpc(){navigator.clipboard.writeText(document.getElementById('grpcOut').textContent);}
+
+// SOAP
+async function soap(){try{
+  const env=`<?xml version="1.0" encoding="UTF-8"?>
+<soap:Envelope xmlns:soap="http://schemas.xmlsoap.org/soap/envelope/" xmlns:tns="http://example.com/calculator">
+  <soap:Body><tns:AddRequest><a>5</a><b>7</b></tns:AddRequest></soap:Body>
+</soap:Envelope>`;
+  const r=await fetch('/soap',{method:'POST',headers:{'Content-Type':'text/xml;charset=utf-8','SOAPAction':'http://example.com/calculator/Add'},body:env});
+  show('soapOut', await r.text());
+}catch(e){err('soapOut',e);}}
+
+// Webhooks
+async function whSub(){try{
+  const url = location.origin + '/api/webhooks/receiver';
+  const r=await fetch('/api/webhooks/subscribe',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({url})});
+  show('whOut',await r.json());
+}catch(e){err('whOut',e);}}
+async function whTrigger(){try{
+  const r=await fetch('/api/webhooks/trigger',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({type:'order.created',data:{orderId:42}})});
+  show('whOut',await r.json());
+}catch(e){err('whOut',e);}}
+async function whLog(){try{const r=await fetch('/api/webhooks/receiver/log');show('whOut',await r.json());}catch(e){err('whOut',e);}}
+
+connectWS();
+</script>
+</body>
+</html>
