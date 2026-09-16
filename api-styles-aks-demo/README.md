@@ -118,10 +118,8 @@ node -e 'const W=require("ws");const s=new W("ws://'$IP'/ws");s.on("message",m=>
 
 ### 4) gRPC
 ```bash
-cd app
-node grpc-client.js $IP:50051
 # or, if you have grpcurl:
-grpcurl -plaintext -d '{"a":5,"b":7}' $IP:50051 demo.Calculator/Add
+grpcurl -plaintext   -import-path ./app/proto   -proto demo.proto   -d '{"a":5,"b":7}'   $lbIP:50051   demo.Calculator/Add
 ```
 
 ### 5) SOAP
